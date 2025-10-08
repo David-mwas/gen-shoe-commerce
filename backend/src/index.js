@@ -20,15 +20,22 @@ async function start() {
   await connectDB(process.env.MONGO_URI);
 
   const app = express();
+  app.use(cors());
+  const allowedOrigins = [
+    "http://localhost:5173",
+    "https://shoestore-rust.vercel.app",
+  ];
+
   app.use(
     cors({
-      origin: ["https://shoestore-rust.vercel.app", "http://localhost:5173"],
-    })
-  );
-  app.use(
-    cors({
-      methods: ["GET", "POST", "PUT", "DELETE"],
-      credentials: true,
+      origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+      credentials: true, // optional if you use cookies/auth headers
     })
   );
   app.use(express.json());
