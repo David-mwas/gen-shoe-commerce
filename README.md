@@ -3,6 +3,12 @@
 ## Overview
 
 A modern, full-featured eCommerce platform for selling shoes, built with React, Vite, Tailwind CSS, and Supabase.
+<div>
+
+![alt text](image.png)
+
+![alt text](image-1.png)
+</div>
 
 ## Features
 
