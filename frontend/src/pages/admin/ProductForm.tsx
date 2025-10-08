@@ -164,17 +164,29 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
 
     // fallback direct fetch
     const token = localStorage.getItem("token"); // adjust to your auth storage if different
-    const res = await fetch(url, {
+    // const res = await fetch(url, {
+    //   method: "POST",
+    //   body: fd,
+    //   headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    // });
+    // if (!res.ok) {
+    //   const text = await res.text();
+    //   throw new Error(`Upload failed: ${res.status} ${text}`);
+    // }
+    // const json = await res.json();
+    // return { url: json.url || json.secure_url, public_id: json.public_id };
+    const result = await apiFetch("/uploads", {
       method: "POST",
       body: fd,
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      isForm: true,
     });
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Upload failed: ${res.status} ${text}`);
+    // result may be { url, transparent_url, public_id, raw }
+    if (result && (result.transparent_url || result.url || result.secure_url)) {
+      return {
+        url: result.transparent_url || result.url || result.secure_url,
+        public_id: result.public_id,
+      };
     }
-    const json = await res.json();
-    return { url: json.url || json.secure_url, public_id: json.public_id };
   }
 
   // // uploads all selected files and returns urls
