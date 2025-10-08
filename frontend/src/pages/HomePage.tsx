@@ -281,7 +281,6 @@
 //   );
 // }
 
-
 // src/pages/HomePage.tsx
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -291,6 +290,7 @@ import { ProductCard } from "../components/products/ProductCard";
 import { useCart } from "../hooks/useCart";
 import { useAuth } from "../hooks/useAuth";
 import { apiFetch } from "../lib/api";
+import HeroShoe from "../components/HeroShoe";
 
 interface Product {
   id: string;
@@ -396,7 +396,9 @@ export function HomePage() {
       requestAnimationFrame(() => {
         document
           .querySelectorAll(".fp-card")
-          .forEach((el, i) => (el as HTMLElement).style.setProperty("--index", String(i)));
+          .forEach((el, i) =>
+            (el as HTMLElement).style.setProperty("--index", String(i))
+          );
       });
     } catch (err) {
       console.error("Error loading featured products:", err);
@@ -456,6 +458,14 @@ export function HomePage() {
       {/* Inline keyframes and a few helper classes so Tailwind purge doesn't remove them */}
       <style>{`
         /* hero floating shoe bob */
+           @keyframes slideInLeft {
+            0% { opacity: 0; transform: translateX(-100%); }
+            100% { opacity: 1; transform: translateX(0); }
+          }
+         @keyframes slideInRight {
+          0% { opacity: 0; transform: translateX(100%); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
         @keyframes floaty {
           0% { transform: translateY(0) rotate(-10deg); opacity: 0.95; }
           50% { transform: translateY(-18px) rotate(-6deg); opacity: 1; }
@@ -509,6 +519,14 @@ export function HomePage() {
           animation: confettiFall 3.6s ease-in forwards;
           opacity: 0.95;
         }
+
+        .slide-in-left {
+          animation: slideInLeft 900ms cubic-bezier(.16,.84,.4,1) both;
+        }
+
+      .slide-in-right {
+        animation: slideInRight 900ms cubic-bezier(.16,.84,.4,1) both;
+      }
       `}</style>
 
       {/* HERO */}
@@ -517,7 +535,7 @@ export function HomePage() {
         <div className="absolute inset-0 opacity-20 bg-[url('https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=1920')] bg-cover bg-center mix-blend-overlay" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
-          <div className="w-full lg:w-1/2 text-white z-10">
+          <div className="w-full lg:w-1/2 text-white z-10 slide-in-left">
             <h1 className="text-5xl md:text-7xl font-extrabold mb-4 leading-tight drop-shadow-lg">
               Step into <span className="text-amber-300">Style</span>,
               <br />
@@ -559,10 +577,13 @@ export function HomePage() {
           </div>
 
           {/* floating shoe */}
-          <div className="hidden lg:block absolute right-8 top-14 w-[420px] h-[420px] pointer-events-none select-none ">
+          <div
+            className="hidden lg:block absolute right-8 top-14 w-[420px] h-[420px] pointer-events-none select-none slide-in-right"
+            style={{ animationDelay: "200ms" }}
+          >
             <div className="relative w-full h-full">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-amber-400/10 to-rose-400/5 blur-3xl transform -rotate-6" />
-              <img
+              {/* <img
                 ref={heroShoeRef}
                 src={
                   featuredProducts[0]?.image_url ||
@@ -571,7 +592,9 @@ export function HomePage() {
                 alt="Floating shoe"
                 className="hero-shoe w-full h-full object-contain drop-shadow-2xl rounded-md shadow-lg"
                 style={{ transform: "rotate(-10deg)" }}
-              />
+              /> */}
+
+              <HeroShoe imageUrl={featuredProducts[0]?.image_url} alt="" />
             </div>
           </div>
         </div>
