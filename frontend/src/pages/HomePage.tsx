@@ -577,10 +577,7 @@ export function HomePage() {
           </div>
 
           {/* floating shoe */}
-          <div
-            className="hidden lg:block absolute right-8 top-14 w-[420px] h-[420px] pointer-events-none select-none slide-in-right"
-            style={{ animationDelay: "200ms" }}
-          >
+          <div className="hidden lg:block absolute right-8 top-14 w-[420px] h-[420px] pointer-events-none select-none slide-in-right">
             <div className="relative w-full h-full">
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-amber-400/10 to-rose-400/5 blur-3xl transform -rotate-6" />
               {/* <img

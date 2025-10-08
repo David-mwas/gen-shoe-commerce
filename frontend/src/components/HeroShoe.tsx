@@ -127,7 +127,7 @@ export default function HeroShoe({
       )}
 
       {/* Actual hero image */}
-      {(imageUrl || effectiveFallback) && (loaded || !lqip) && (
+      {imageUrl && (
         <img
           src={errored ? effectiveFallback : imageUrl || effectiveFallback}
           alt={alt}
