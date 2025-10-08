@@ -25,6 +25,23 @@ async function start() {
   app.use(express.urlencoded({ extended: true }));
   // morgan logger
   app.use(require("morgan")("dev"));
+  const allowedOrigins = [
+    "http://localhost:5173",
+    "https://shoestore-rust.vercel.app",
+  ];
+
+  app.use(
+    cors({
+      origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+      credentials: true, // optional if you use cookies/auth headers
+    })
+  );
 
   app.use("/api/auth", authRoutes);
   app.use("/api/products", productsRoutes);
@@ -37,6 +54,12 @@ async function start() {
   app.use("/api/brands", brandsRoutes);
   app.use("/api/categories", categoriesRoutes);
   app.use("/api/payments", paymentsRoutes);
+
+  // error handling
+  app.use((err, req, res, next) => {
+    console.error("Unhandled error:", err);
+    res.status(500).json({ error: err.message || "Internal server error" });
+  });
 
   app.get("/", (req, res) => res.send("Shoe API up"));
 
