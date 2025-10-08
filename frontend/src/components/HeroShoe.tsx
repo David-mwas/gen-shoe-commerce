@@ -102,15 +102,20 @@ export default function HeroShoe({
       </style>
 
       {/* LQIP / placeholder (visible until loaded) */}
-      {/* {lqip ? (
-        <img
-          src={lqip}
-          aria-hidden={true}
-          alt=""
-          className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ease-out transform ${
-            loaded ? "opacity-0 scale-105" : "opacity-100 scale-105"
-          } filter`}
-          style={{ filter: "blur(8px)" }}
+      {lqip ? (
+        // <img
+        //   src={lqip}
+        //   aria-hidden={true}
+        //   alt=""
+        //   className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ease-out transform ${
+        //     loaded ? "opacity-0 scale-105" : "opacity-100 scale-105"
+        //   } filter`}
+        //   style={{ filter: "blur(8px)" }}
+        // />
+        <div
+          className={`absolute inset-0 rounded-2xl bg-gradient-to-tr from-amber-300/8 to-rose-300/6 transition-opacity duration-500 ${
+            loaded ? "opacity-0" : "opacity-100"
+          }`}
         />
       ) : (
         // fallback colored placeholder (keeps visual stable)
@@ -119,11 +124,10 @@ export default function HeroShoe({
             loaded ? "opacity-0" : "opacity-100"
           }`}
         />
-      )} */}
+      )}
 
       {/* Actual hero image */}
-      {/* Actual hero image */}
-      {imageUrl && (
+      {(imageUrl || effectiveFallback) && (loaded || !lqip) && (
         <img
           src={errored ? effectiveFallback : imageUrl || effectiveFallback}
           alt={alt}
