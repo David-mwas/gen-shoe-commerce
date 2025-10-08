@@ -102,7 +102,7 @@ export default function HeroShoe({
       </style>
 
       {/* LQIP / placeholder (visible until loaded) */}
-      {lqip ? (
+      {/* {lqip ? (
         <img
           src={lqip}
           aria-hidden={true}
@@ -119,11 +119,11 @@ export default function HeroShoe({
             loaded ? "opacity-0" : "opacity-100"
           }`}
         />
-      )}
+      )} */}
 
       {/* Actual hero image */}
       {/* Actual hero image */}
-      {(imageUrl || effectiveFallback) && (loaded || !lqip) && (
+      {imageUrl && (
         <img
           src={errored ? effectiveFallback : imageUrl || effectiveFallback}
           alt={alt}
