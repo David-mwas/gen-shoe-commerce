@@ -55,7 +55,7 @@ async function start() {
   app.use("/api/categories", categoriesRoutes);
   app.use("/api/payments", paymentsRoutes);
 
-  app.get("/", (req, res) => res.send("Shoe API up"));
+  app.get("/", (req, res) => res.send("Shoe API up& running"));
 
   app.listen(PORT, () =>
     console.log(`Server listening on http://localhost:${PORT}`)
