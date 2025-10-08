@@ -20,7 +20,17 @@ async function start() {
   await connectDB(process.env.MONGO_URI);
 
   const app = express();
-  app.use(cors());
+  app.use(
+    cors({
+      origin: ["https://shoestore-rust.vercel.app", "http://localhost:5173"],
+    })
+  );
+  app.use(
+    cors({
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      credentials: true,
+    })
+  );
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   // morgan logger
