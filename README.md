@@ -111,9 +111,10 @@ Customers can:
 
 ### Security Features
 
-- Row Level Security (RLS) enabled on all tables
+<!-- - Row Level Security (RLS) enabled on all tables -->
+
 - Admin-only access to product and order management
-- Secure authentication with Supabase Auth
+<!-- - Secure authentication with Supabase Auth -->
 - User data isolation
 
 ### Development
