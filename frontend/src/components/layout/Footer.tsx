@@ -1,5 +1,5 @@
-import { Facebook, Instagram, Twitter } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Facebook, Instagram, Twitter } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function Footer() {
   return (
@@ -14,7 +14,8 @@ export function Footer() {
               <span className="text-xl font-bold">ShoeStore</span>
             </div>
             <p className="text-slate-400 text-sm">
-              Your destination for premium quality shoes. Step into style and comfort.
+              Your destination for premium quality shoes. Step into style and
+              comfort.
             </p>
           </div>
 
@@ -27,12 +28,18 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/shop?featured=true" className="hover:text-white transition-colors">
+                <Link
+                  to="/shop?featured=true"
+                  className="hover:text-white transition-colors"
+                >
                   Featured
                 </Link>
               </li>
               <li>
-                <Link to="/shop?status=in_stock" className="hover:text-white transition-colors">
+                <Link
+                  to="/shop?status=in_stock"
+                  className="hover:text-white transition-colors"
+                >
                   New Arrivals
                 </Link>
               </li>
@@ -58,7 +65,10 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <Link to="/orders" className="hover:text-white transition-colors">
+                <Link
+                  to="/orders"
+                  className="hover:text-white transition-colors"
+                >
                   Track Order
                 </Link>
               </li>
@@ -91,7 +101,9 @@ export function Footer() {
         </div>
 
         <div className="border-t border-slate-800 mt-8 pt-8 text-center text-sm text-slate-400">
-          <p>&copy; {new Date().getFullYear()} ShoeStore. All rights reserved.</p>
+          <p>
+            &copy; {new Date().getFullYear()} ShoeStore. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

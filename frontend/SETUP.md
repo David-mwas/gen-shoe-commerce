@@ -30,6 +30,7 @@ The project is already set up and ready to use. All dependencies are installed.
 ### Database Setup
 
 The database schema has been created with the following tables:
+
 - `categories` - Product categories
 - `brands` - Shoe brands
 - `products` - Product catalog
@@ -70,6 +71,7 @@ Once logged in as admin, you can:
 The M-Pesa payment integration is set up using an Edge Function. Currently, it's configured as a simulation for testing purposes.
 
 To integrate with actual M-Pesa API:
+
 1. Get M-Pesa API credentials from Safaricom
 2. Update the Edge Function at `supabase/functions/mpesa-payment/index.ts`
 3. Add your M-Pesa credentials as Supabase secrets
@@ -77,6 +79,7 @@ To integrate with actual M-Pesa API:
 ### User Features
 
 Customers can:
+
 - Browse and search products
 - Filter by category, brand, size, and price
 - View detailed product pages
@@ -120,6 +123,7 @@ The dev server is automatically started. You can view the application in your br
 ### Production Build
 
 To create a production build:
+
 ```bash
 npm run build
 ```

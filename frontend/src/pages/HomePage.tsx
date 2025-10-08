@@ -147,14 +147,14 @@ export function HomePage() {
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <div className="max-w-2xl">
-            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              Step Into Style,
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+              Step In Style,
               <br />
               Walk in Comfort
             </h1>
             <p className="text-xl text-slate-300 mb-8">
-              Discover premium footwear from the world's leading brands.
-              Quality, style, and comfort in every step.
+              Discover locally made footwear from the heart of Kenya.{" "}
+              <b>Quality</b>, <b>style</b>, and <b>comfort</b> in every step.
             </p>
             <Link
               to="/shop"

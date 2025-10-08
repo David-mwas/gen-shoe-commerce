@@ -1,25 +1,24 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 export function SignupPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError("Password must be at least 6 characters");
       setLoading(false);
       return;
     }
@@ -27,12 +26,12 @@ export function SignupPage() {
     try {
       const { error } = await signUp(email, password, fullName);
       if (error) {
-        setError(error.message || 'Failed to create account');
+        setError(error.message || "Failed to create account");
       } else {
-        navigate('/');
+        navigate("/");
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      setError(err.message || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -43,7 +42,9 @@ export function SignupPage() {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">Create Account</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-2">
+              Create Account
+            </h2>
             <p className="text-slate-600">Join ShoeStore today</p>
           </div>
 
@@ -55,7 +56,10 @@ export function SignupPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-slate-700 mb-2">
+              <label
+                htmlFor="fullName"
+                className="block text-sm font-medium text-slate-700 mb-2"
+              >
                 Full Name
               </label>
               <input
@@ -70,7 +74,10 @@ export function SignupPage() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-slate-700 mb-2"
+              >
                 Email Address
               </label>
               <input
@@ -85,7 +92,10 @@ export function SignupPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-slate-700 mb-2"
+              >
                 Password
               </label>
               <input
@@ -104,14 +114,17 @@ export function SignupPage() {
               disabled={loading}
               className="w-full bg-slate-900 text-white py-3 rounded-lg font-semibold hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? "Creating account..." : "Create Account"}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-slate-600">
-              Already have an account?{' '}
-              <Link to="/login" className="text-slate-900 font-semibold hover:text-slate-700">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-slate-900 font-semibold hover:text-slate-700"
+              >
                 Sign in
               </Link>
             </p>
