@@ -122,18 +122,20 @@ export default function HeroShoe({
       )}
 
       {/* Actual hero image */}
-      <img
-        src={errored ? effectiveFallback : imageUrl || effectiveFallback}
-        alt={alt}
-        className={`relative w-full h-full hero-shoe drop-shadow-2xl object-contain transition-opacity duration-600 ease-out rounded-md shadow-lg ${
-          loaded && !errored ? "opacity-100" : "opacity-0"
-        }`}
-        onLoad={() => setLoaded(true)}
-        onError={() => setErrored(true)}
-        // For hero images we often want eager loading. For non-hero use lazy.
-        loading={preload ? "eager" : "lazy"}
-        style={{ transform: "rotate(-10deg)" }}
-      />
+      {/* Actual hero image */}
+      {(imageUrl || effectiveFallback) && (loaded || !lqip) && (
+        <img
+          src={errored ? effectiveFallback : imageUrl || effectiveFallback}
+          alt={alt}
+          className={`relative w-full h-full hero-shoe drop-shadow-2xl object-contain transition-opacity duration-600 ease-out rounded-md shadow-lg ${
+            loaded && !errored ? "opacity-100" : "opacity-0"
+          }`}
+          onLoad={() => setLoaded(true)}
+          onError={() => setErrored(true)}
+          loading={preload ? "eager" : "lazy"}
+          style={{ transform: "rotate(-10deg)" }}
+        />
+      )}
 
       {/* small decorative shadow/overlay (keeps "pop" consistent while loading) */}
       <div className="absolute inset-0 pointer-events-none rounded-2xl" />
