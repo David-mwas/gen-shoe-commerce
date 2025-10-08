@@ -177,13 +177,107 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
     return { url: json.url || json.secure_url, public_id: json.public_id };
   }
 
+  // // uploads all selected files and returns urls
+  // const uploadSelectedFiles = async () => {
+  //   setUploadingFiles(true);
+  //   const uploaded: string[] = [...form.images]; // start with existing images
+  //   try {
+  //     if (mainFile) {
+  //       const r = await uploadFile(mainFile);
+  //       setForm((f) => ({ ...f, image_url: r.url }));
+  //       setMainPreview(r.url);
+  //     }
+
+  //     if (additionalFiles && additionalFiles.length) {
+  //       // upload sequentially to avoid rate limits; you can parallelize if desired
+  //       for (const f of additionalFiles) {
+  //         const r = await uploadFile(f);
+  //         uploaded.push(r.url);
+  //       }
+  //       setForm((f) => ({ ...f, images: uploaded }));
+  //       setAdditionalPreviews(uploaded);
+  //     }
+
+  //     setUploadingFiles(false);
+  //     return uploaded;
+  //   } catch (err) {
+  //     setUploadingFiles(false);
+  //     console.error("File upload error", err);
+  //     throw err;
+  //   }
+  // };
+
+  // const submit = async (e?: React.FormEvent) => {
+  //   e?.preventDefault();
+  //   setSaving(true);
+  //   try {
+  //     // If there are any files selected, upload them first
+  //     if (mainFile || (additionalFiles && additionalFiles.length)) {
+  //       await uploadSelectedFiles();
+  //     }
+  //     console.log("form before payload", form);
+  //     const payload: any = {
+  //       name: form.name,
+  //       slug: form.slug || slugify(form.name),
+  //       description: form.description,
+  //       price: Number(form.price) || 0,
+  //       image_url: form.image_url,
+  //       images: (form.images || []).filter(Boolean),
+  //       sizes: form.sizes ? form.sizes.split(",").map((s) => s.trim()) : [],
+  //       colors: form.colors ? form.colors.split(",").map((s) => s.trim()) : [],
+  //       stock_quantity: Number(form.stock_quantity) || 0,
+  //       status: form.status,
+  //       featured: !!form.featured,
+  //       category_id: form.category_id || null,
+  //       brand_id: form.brand_id || null,
+  //     };
+
+  //     console.log("payload", payload);
+
+  //     if (productId) {
+  //       await apiFetch(`/products/${productId}`, {
+  //         method: "PUT",
+  //         body: payload,
+  //       });
+  //       alert("Product updated");
+  //     } else {
+  //       await apiFetch("/products", {
+  //         method: "POST",
+  //         body: payload,
+  //       });
+
+  //       console.log("payload", payload);
+  //       alert("Product created");
+  //     }
+
+  //     navigate("/admin/products");
+  //   } catch (err: any) {
+  //     console.error("Save product error", err);
+  //     alert(err.message || "Failed to save product");
+  //   } finally {
+  //     setSaving(false);
+  //   }
+  // };
+
+  // --- inside ProductForm.tsx ---
+
   // uploads all selected files and returns urls
-  const uploadSelectedFiles = async () => {
+  const uploadSelectedFiles = async (): Promise<{
+    mainUrl?: string | null;
+    images: string[];
+  }> => {
     setUploadingFiles(true);
-    const uploaded: string[] = [...form.images]; // start with existing images
+    // start with existing images in state (don't mutate form.images directly)
+    const uploaded: string[] = Array.isArray(form.images)
+      ? [...form.images]
+      : [];
+    let mainUrl: string | null = form.image_url || null;
+
     try {
       if (mainFile) {
         const r = await uploadFile(mainFile);
+        mainUrl = r.url;
+        // update state so previews match, but don't rely on this for payload
         setForm((f) => ({ ...f, image_url: r.url }));
         setMainPreview(r.url);
       }
@@ -192,14 +286,14 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
         // upload sequentially to avoid rate limits; you can parallelize if desired
         for (const f of additionalFiles) {
           const r = await uploadFile(f);
-          uploaded.push(r.url);
+          if (r.url) uploaded.push(r.url);
         }
         setForm((f) => ({ ...f, images: uploaded }));
         setAdditionalPreviews(uploaded);
       }
 
       setUploadingFiles(false);
-      return uploaded;
+      return { mainUrl, images: uploaded };
     } catch (err) {
       setUploadingFiles(false);
       console.error("File upload error", err);
@@ -211,18 +305,29 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
     e?.preventDefault();
     setSaving(true);
     try {
-      // If there are any files selected, upload them first
+      // If there are any files selected, upload them first and use returned URLs
+      let uploadedMain: string | null = form.image_url || null;
+      let uploadedImages: string[] = Array.isArray(form.images)
+        ? [...form.images]
+        : [];
+
       if (mainFile || (additionalFiles && additionalFiles.length)) {
-        await uploadSelectedFiles();
+        const result = await uploadSelectedFiles();
+        if (result.mainUrl) uploadedMain = result.mainUrl;
+        uploadedImages = result.images || uploadedImages;
       }
+
+      // DEBUG: show what we'll actually send
+      console.log("form before payload", form);
+      console.log("upload results", { uploadedMain, uploadedImages });
 
       const payload: any = {
         name: form.name,
         slug: form.slug || slugify(form.name),
         description: form.description,
         price: Number(form.price) || 0,
-        image_url: form.image_url,
-        images: (form.images || []).filter(Boolean),
+        image_url: uploadedMain || "", // use the upload result, not stale state
+        images: (uploadedImages || []).filter(Boolean),
         sizes: form.sizes ? form.sizes.split(",").map((s) => s.trim()) : [],
         colors: form.colors ? form.colors.split(",").map((s) => s.trim()) : [],
         stock_quantity: Number(form.stock_quantity) || 0,
@@ -245,8 +350,6 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
           method: "POST",
           body: payload,
         });
-
-        console.log("payload", payload);
         alert("Product created");
       }
 

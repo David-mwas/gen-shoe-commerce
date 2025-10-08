@@ -8,9 +8,9 @@ async function getCurrentUserCartItems(req, res) {
       model: "Product",
     });
     // map to match frontend shape a bit
-    const mapped = items.map((item) => ({
+    const mapped = items?.map((item) => ({
       id: item._id,
-      product_id: item.product._id,
+      product_id: item?.product?._id,
       quantity: item.quantity,
       size: item.size,
       color: item.color,
@@ -25,6 +25,7 @@ async function getCurrentUserCartItems(req, res) {
     }));
     res.json(mapped);
   } catch (err) {
+    console.error("Error fetching cart items:", err);
     res.status(500).json({ message: "Server error" });
   }
 }
