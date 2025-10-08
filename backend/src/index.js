@@ -21,23 +21,6 @@ async function start() {
 
   const app = express();
   app.use(cors());
-  const allowedOrigins = [
-    "http://localhost:5173",
-    "https://shoestore-rust.vercel.app",
-  ];
-
-  app.use(
-    cors({
-      origin: function (origin, callback) {
-        if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(new Error("Not allowed by CORS"));
-        }
-      },
-      credentials: true, // optional if you use cookies/auth headers
-    })
-  );
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   // morgan logger
@@ -55,7 +38,7 @@ async function start() {
   app.use("/api/categories", categoriesRoutes);
   app.use("/api/payments", paymentsRoutes);
 
-  app.get("/", (req, res) => res.send("Shoe API up& running"));
+  app.get("/", (req, res) => res.send("Shoe API up"));
 
   app.listen(PORT, () =>
     console.log(`Server listening on http://localhost:${PORT}`)
