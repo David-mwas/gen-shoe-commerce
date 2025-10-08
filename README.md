@@ -1,4 +1,4 @@
-# ShoeStore - eCommerce Setup Guide
+# ShoeStore - (eCommerce)
 
 ## Overview
 
