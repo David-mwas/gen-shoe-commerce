@@ -31,7 +31,7 @@ function App() {
     <Router>
       <AuthProvider>
         <CartProvider>
-          <ToastContainer position="top-right" />
+          <ToastContainer position="top-right" autoClose={3000} />
           <Routes>
             {/* Routes that use header/footer */}
             <Route element={<MainLayout />}>
