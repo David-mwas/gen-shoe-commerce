@@ -103,15 +103,6 @@ export default function HeroShoe({
 
       {/* LQIP / placeholder (visible until loaded) */}
       {lqip ? (
-        // <img
-        //   src={lqip}
-        //   aria-hidden={true}
-        //   alt=""
-        //   className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-500 ease-out transform ${
-        //     loaded ? "opacity-0 scale-105" : "opacity-100 scale-105"
-        //   } filter`}
-        //   style={{ filter: "blur(8px)" }}
-        // />
         <div
           className={`absolute inset-0 rounded-2xl bg-gradient-to-tr from-amber-300/8 to-rose-300/6 transition-opacity duration-500 ${
             loaded ? "opacity-0" : "opacity-100"

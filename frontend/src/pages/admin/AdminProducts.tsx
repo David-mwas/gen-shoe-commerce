@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Plus, CreditCard as Edit, Trash2, Search } from "lucide-react";
 import { apiFetch } from "../../lib/api";
 import { useAuth } from "../../hooks/useAuth";
+import { toast } from "react-toastify";
 
 interface Product {
   id: string;
@@ -57,11 +58,11 @@ export function AdminProducts() {
 
     try {
       await apiFetch(`/products/${productId}`, { method: "DELETE" });
-      alert("Product deleted successfully");
+      toast.error("Product deleted successfully");
       loadProducts();
     } catch (error) {
       console.error("Error deleting product:", error);
-      alert("Failed to delete product");
+      toast.error("Failed to delete product");
     }
   };
 

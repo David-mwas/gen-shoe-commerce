@@ -7,6 +7,7 @@ export interface Profile {
   phone?: string | null;
   address?: any;
   is_admin?: boolean;
+  // role: "admin" | "user";
 }
 
 interface AuthContextType {

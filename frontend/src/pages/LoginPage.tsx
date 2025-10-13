@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { toast } from 'react-toastify';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -19,11 +20,14 @@ export function LoginPage() {
     try {
       const { error } = await signIn(email, password);
       if (error) {
+        toast.error(error.message || 'Invalid email or password');
         setError(error.message || 'Invalid email or password');
       } else {
+        toast.success('Successfully signed in!');
         navigate('/');
       }
     } catch (err: any) {
+      toast.error(err.message || 'An error occurred');
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);

@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../hooks/useCart";
+
 
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
+import { useCartContext } from "../hooks/useCart";
 
 export function CheckoutPage() {
   const { user, profile } = useAuth();
-  const { cartItems, getTotal, clearCart } = useCart();
+  const { cartItems, getTotal, clearCart } = useCartContext();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);

@@ -3,8 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ShoppingCart, ChevronLeft } from "lucide-react";
 import { apiFetch } from "../lib/api";
 
-import { useCart } from "../hooks/useCart";
+
 import { useAuth } from "../hooks/useAuth";
+import { useCartContext } from "../hooks/useCart";
+import { toast } from "react-toastify";
 
 interface Product {
   id: string;
@@ -25,7 +27,7 @@ export function ProductDetailPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart } = useCartContext();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState("");
@@ -63,23 +65,23 @@ export function ProductDetailPage() {
 
   const handleAddToCart = async () => {
     if (!user) {
-      alert("Please sign in to add items to cart");
+      toast.error("Please sign in to add items to cart");
       navigate("/login");
       return;
     }
 
     if (!selectedSize) {
-      alert("Please select a size");
+      toast.error("Please select a size");
       return;
     }
 
     setAdding(true);
     try {
       await addToCart(product!.id, selectedSize, selectedColor || null);
-      alert("Added to cart!");
+      toast.success("Added to cart!");
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert("Failed to add to cart");
+      toast.error("Failed to add to cart");
     } finally {
       setAdding(false);
     }

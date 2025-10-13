@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { apiFetch } from "../../lib/api";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function AdminCategories() {
   const { isAdmin } = useAuth();
@@ -58,7 +59,7 @@ export default function AdminCategories() {
       load();
     } catch (err) {
       console.error("Create category error", err);
-      alert("Failed to create category");
+      toast.error("Failed to create category");
     }
   };
 
@@ -69,7 +70,7 @@ export default function AdminCategories() {
       load();
     } catch (err) {
       console.error("Delete category error", err);
-      alert("Failed to delete category");
+      toast.error("Failed to delete category");
     }
   };
 
@@ -87,7 +88,7 @@ export default function AdminCategories() {
       load();
     } catch (err) {
       console.error("Create brand error", err);
-      alert("Failed to create brand");
+      toast.error("Failed to create brand");
     }
   };
 
@@ -98,7 +99,7 @@ export default function AdminCategories() {
       load();
     } catch (err) {
       console.error("Delete brand error", err);
-      alert("Failed to delete brand");
+      toast.error("Failed to delete brand");
     }
   };
 

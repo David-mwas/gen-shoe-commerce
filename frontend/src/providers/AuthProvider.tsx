@@ -1,5 +1,5 @@
-import React, { useEffect, useState, ReactNode } from "react";
-import { API_BASE, apiFetch} from "../lib/api";
+import { useEffect, useState, ReactNode } from "react";
+import { API_BASE, apiFetch } from "../lib/api";
 import { AuthContext, Profile } from "../contexts/AuthContext";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         full_name: data.user.full_name,
         phone: data.user.phone,
         address: data.user.address,
-        is_admin: data.user.is_admin,
+        is_admin: data.user.role === import.meta.env.VITE_USER_ROLE,
       });
     } catch (err) {
       console.error("Session load failed", err);

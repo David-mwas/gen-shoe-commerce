@@ -2,14 +2,15 @@ import { ShoppingCart, Search, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { useCart } from "../../hooks/useCart";
+// import { useCart } from "../../hooks/useCart";
 import { useAuth } from "../../hooks/useAuth";
+import { useCartContext } from "../../hooks/useCart";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { user, isAdmin, signOut } = useAuth();
-  const { cartCount } = useCart();
+  const { cartCount } = useCartContext();
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {

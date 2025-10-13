@@ -7,7 +7,12 @@ const UserSchema = new mongoose.Schema(
     full_name: { type: String, default: null },
     phone: { type: String, default: null },
     address: { type: mongoose.Schema.Types.Mixed, default: null },
-    is_admin: { type: Boolean, default: false },
+    // is_admin: { type: Boolean, default: false },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
   },
   { timestamps: true }
 );

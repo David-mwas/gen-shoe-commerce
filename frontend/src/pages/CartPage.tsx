@@ -1,11 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
-import { useCart } from '../hooks/useCart';
+
 import { useAuth } from '../hooks/useAuth';
+import { useCartContext } from '../hooks/useCart';
 
 
 export function CartPage() {
-  const { cartItems, loading, updateQuantity, removeFromCart, getTotal } = useCart();
+  const { cartItems, loading, updateQuantity, removeFromCart, getTotal } = useCartContext();
   const { user } = useAuth();
   const navigate = useNavigate();
 

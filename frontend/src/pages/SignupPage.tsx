@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { toast } from "react-toastify";
 
 export function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,20 +19,60 @@ export function SignupPage() {
     setError("");
     setLoading(true);
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    // if (password.length < 6) {
+    //   toast.error("Password must be at least 6 characters");
+    //   setError("Password must be at least 6 characters");
+    //   setLoading(false);
+    //   return;
+    // }
+
+    // regex for email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address");
+      setError("Please enter a valid email address");
       setLoading(false);
       return;
     }
 
+    // regex for password validation
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      toast.error(
+        "Password must be at least 8 characters long and contain at least one letter and one number"
+      );
+      setError(
+        "Password must be at least 8 characters long and contain at least one letter and one number"
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+    // regex for full name validation (only letters and spaces)
+    const fullNameRegex = /^[A-Za-z\s]+$/;
+    if (!fullNameRegex.test(fullName) || fullName.trim().length < 2) {
+      toast.error("Please enter a valid full name (only letters and spaces)");
+      setError("Please enter a valid full name (only letters and spaces)");
+      setLoading(false);
+      return;
+    }
     try {
       const { error } = await signUp(email, password, fullName);
       if (error) {
+        toast.error(error.message || "Failed to create account");
         setError(error.message || "Failed to create account");
       } else {
+        toast.success("Account created successfully!");
         navigate("/");
       }
     } catch (err: any) {
+      toast.error(err.message || "An error occurred");
       setError(err.message || "An error occurred");
     } finally {
       setLoading(false);
@@ -105,7 +147,24 @@ export function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-                placeholder="Min. 6 characters"
+                placeholder="Min. 8 characters"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-slate-700 mb-2"
+              >
+                Confirm Password
+              </label>
+              <input
+                id="confirm-password"
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                placeholder="confirm password"
               />
             </div>
 

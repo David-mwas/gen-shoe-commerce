@@ -287,10 +287,11 @@ import { Link } from "react-router-dom";
 import { ArrowRight, TrendingUp, Shield, Truck } from "lucide-react";
 import { ProductCard } from "../components/products/ProductCard";
 
-import { useCart } from "../hooks/useCart";
 import { useAuth } from "../hooks/useAuth";
 import { apiFetch } from "../lib/api";
 import HeroShoe from "../components/HeroShoe";
+import { toast } from "react-toastify";
+import { useCartContext } from "../hooks/useCart";
 
 interface Product {
   id: string;
@@ -312,7 +313,7 @@ export function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart } = useCartContext();
 
   const heroShoeRef = useRef<HTMLImageElement | null>(null);
   const marqueeRef = useRef<HTMLDivElement | null>(null);
@@ -410,7 +411,7 @@ export function HomePage() {
 
   const handleQuickAdd = async (productId: string) => {
     if (!user) {
-      alert("Please sign in to add items to cart");
+      toast.error("Please sign in to add items to cart");
       return;
     }
 
@@ -423,10 +424,10 @@ export function HomePage() {
       await addToCart(productId, defaultSize);
       // small micro-animation on add
       pulseCard(productId);
-      alert("Added to cart!");
+      // toast.success("Added to cart!");
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert("Failed to add to cart");
+      toast.error("Failed to add to cart");
     }
   };
 
@@ -532,7 +533,7 @@ export function HomePage() {
       {/* HERO */}
       <section className="relative h-[640px] overflow-hidden hp-hero-gradient">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 opacity-90" />
-        <div className="absolute inset-0 opacity-20 bg-[url('https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=1920')] bg-cover bg-center mix-blend-overlay" />
+        <div className="absolute inset-0 opacity-20 bg-[url('https://media.istockphoto.com/id/1459150071/photo/life-in-kenya-mombasa-2018.jpg?s=612x612&w=0&k=20&c=75_zYCW-Y_a29-Zz6jqUsx0XobCDBFm40qacyfiy28c=')] bg-cover bg-center mix-blend-overla" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <div className="w-full lg:w-1/2 text-white z-10 slide-in-left">

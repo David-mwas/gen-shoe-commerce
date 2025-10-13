@@ -89,7 +89,7 @@ export function OrdersPage() {
 
         <div className="space-y-4">
           {orders.map((order) => (
-            <div key={order.id} className="bg-white rounded-lg p-6 shadow-sm">
+            <div key={order._id} className="bg-white rounded-lg p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="font-semibold text-slate-900 text-lg">

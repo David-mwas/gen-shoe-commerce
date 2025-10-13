@@ -24,9 +24,13 @@ async function signUp(req, res) {
     });
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, jwtSecret, {
-      expiresIn: jwtExpiresIn,
-    });
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      jwtSecret,
+      {
+        expiresIn: jwtExpiresIn,
+      }
+    );
 
     res.json({
       token,
@@ -51,9 +55,13 @@ async function login(req, res) {
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id }, jwtSecret, {
-      expiresIn: jwtExpiresIn,
-    });
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      jwtSecret,
+      {
+        expiresIn: jwtExpiresIn,
+      }
+    );
     res.json({
       token,
       user: {

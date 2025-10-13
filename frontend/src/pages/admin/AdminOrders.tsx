@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../../lib/api";
 import { useAuth } from "../../hooks/useAuth";
+import { toast } from "react-toastify";
 
 interface Order {
   id: string;
@@ -52,11 +53,11 @@ export function AdminOrders() {
         body: JSON.stringify({ status: newStatus }),
       });
 
-      alert("Order status updated successfully");
+      toast.success("Order status updated successfully");
       loadOrders();
     } catch (error) {
       console.error("Error updating order:", error);
-      alert("Failed to update order status");
+      toast.error("Failed to update order status");
     }
   };
 

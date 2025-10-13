@@ -4,8 +4,10 @@ import { Filter } from "lucide-react";
 import { apiFetch } from "../lib/api";
 import { ProductCard } from "../components/products/ProductCard";
 
-import { useCart } from "../hooks/useCart";
+
 import { useAuth } from "../hooks/useAuth";
+import { useCartContext } from "../hooks/useCart";
+import { toast } from "react-toastify";
 
 interface Product {
   _id: string;
@@ -48,7 +50,7 @@ export function ShopPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart } = useCartContext();
 
   const selectedCategory = searchParams.get("category");
   const selectedBrand = searchParams.get("brand");
@@ -131,23 +133,23 @@ export function ShopPage() {
 
   const handleQuickAdd = async (productId: string) => {
     if (!user) {
-      alert("Please sign in to add items to cart");
+      toast.error("Please sign in to add items to cart");
       return;
     }
     console.log("Quick add:", { productId });
     const product = products.find((p) => p._id === productId);
     if (!product || !product.sizes || product.sizes.length === 0) {
-      alert("Please select a size on the product page");
+      toast.error("Please select a size on the product page");
       return;
     }
 
     try {
       const defaultSize = (product.sizes && product.sizes[0]) || "M";
       await addToCart(productId, defaultSize);
-      alert("Added to cart!");
+      toast.success("Added to cart!");
     } catch (error) {
       console.error("Error adding to cart:", error);
-      alert("Failed to add to cart");
+      toast.error("Failed to add to cart");
     }
   };
 

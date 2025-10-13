@@ -1,86 +1,3 @@
-// const express = require("express");
-// const Product = require("../models/product.model.js");
-// const multer = require("multer");
-// const cloudinary = require("cloudinary").v2;
-
-// const { authMiddleware, isAdmin } = require("../middleware/auth.js");
-// const {
-//   createProduct,
-//   getProducts,
-//   getProductBySlug,
-//   getProductById,
-// } = require("../controllers/product.controller.js");
-
-// const router = express.Router();
-
-// // POST /api/products
-// // expects { name, description, price, image_url, stock_quantity, status, sizes, featured, brandId }
-// // image upload to cloudinary then store url in image_url
-// // Configure Cloudinary
-// // cloudinary.config({
-// //   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-// //   api_key: process.env.CLOUDINARY_API_KEY,
-// //   api_secret: process.env.CLOUDINARY_API_SECRET,
-// // });
-
-// // Multer setup for file upload
-// // const storage = multer.memoryStorage();
-// // const upload = multer({ storage });
-
-// // POST /api/products
-// router.post(
-//   "/",
-//   authMiddleware,
-//   isAdmin,
-//   // upload.single("image"),
-//   createProduct
-// );
-
-// // GET /api/products
-// // supports ?featured=true&status=in_stock&limit=8
-// router.get("/", getProducts);
-
-// // GET /api/products/:slug
-// router.get("/:slug", getProductBySlug);
-
-// // GET /api/products/id/:id
-// router.get("/id/:id", getProductById);
-
-// // update and delete routes can be added later for admin use
-
-// router.put("/:id", authMiddleware, isAdmin, (req, res) => {
-//   const { id } = req.params;
-//   try {
-//     const updatedProduct = Product.findByIdAndUpdate(
-//       id,
-//       { $set: req.body },
-//       { new: true, runValidators: true }
-//     );
-
-//     if (!updatedProduct)
-//       return res.status(404).json({ message: "Product not found" });
-//     res.json(updatedProduct);
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// });
-
-// router.delete("/:id", authMiddleware, isAdmin, (req, res) => {
-//   const { id } = req.params;
-//   try {
-//     Product.findByIdAndDelete(id, (err, deletedProduct) => {
-//       if (err)
-//         return res.status(500).json({ message: "Server error", error: err });
-//       if (!deletedProduct)
-//         return res.status(404).json({ message: "Not found" });
-//       res.json({ message: "Product deleted successfully" });
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// });
-
-// module.exports = router;
 // routes/product.routes.js
 const express = require("express");
 const Product = require("../models/product.model.js");
@@ -91,6 +8,7 @@ const {
   getProducts,
   getProductBySlug,
   getProductById,
+  deleteProduct,
 } = require("../controllers/product.controller.js");
 
 const router = express.Router();
@@ -127,10 +45,16 @@ router.put("/:id", authMiddleware, isAdmin, async (req, res) => {
         if (s.startsWith("[")) {
           req.body.sizes = JSON.parse(s);
         } else {
-          req.body.sizes = s.split(",").map((x) => x.trim()).filter(Boolean);
+          req.body.sizes = s
+            .split(",")
+            .map((x) => x.trim())
+            .filter(Boolean);
         }
       } catch (_) {
-        req.body.sizes = s.split(",").map((x) => x.trim()).filter(Boolean);
+        req.body.sizes = s
+          .split(",")
+          .map((x) => x.trim())
+          .filter(Boolean);
       }
     }
 
@@ -148,21 +72,13 @@ router.put("/:id", authMiddleware, isAdmin, async (req, res) => {
     return res.json(updatedProduct);
   } catch (error) {
     console.error("product update error:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 });
 
 // Delete product (admin)
-router.delete("/:id", authMiddleware, isAdmin, async (req, res) => {
-  const { id } = req.params;
-  try {
-    const deleted = await Product.findByIdAndDelete(id).exec();
-    if (!deleted) return res.status(404).json({ message: "Product not found" });
-    return res.json({ message: "Product deleted successfully", id: deleted._id });
-  } catch (error) {
-    console.error("product delete error:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
-  }
-});
+router.delete("/:id", authMiddleware, isAdmin, deleteProduct);
 
 module.exports = router;

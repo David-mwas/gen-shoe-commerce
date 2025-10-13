@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../../lib/api";
 import { useAuth } from "../../hooks/useAuth";
+import { toast } from "react-toastify";
 
 interface Props {
   productId?: string;
@@ -16,14 +17,17 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
   const [categories, setCategories] = useState<any[]>([]);
   const [brands, setBrands] = useState<any[]>([]);
 
-  // product form fields
+  // product form fields (added image_public_id, transparent_url, images_public_ids)
   const [form, setForm] = useState({
     name: "",
     slug: "",
     description: "",
     price: 0,
     image_url: "",
+    image_public_id: "" as string | null,
+    transparent_url: "" as string | null,
     images: [] as string[],
+    images_public_ids: [] as string[],
     sizes: "" as string, // comma separated input
     colors: "" as string,
     stock_quantity: 0,
@@ -75,7 +79,12 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
         description: data.description || "",
         price: data.price || 0,
         image_url: data.image_url || "",
-        images: data.images || [],
+        image_public_id: data.image_public_id || null,
+        transparent_url: data.transparent_url || null,
+        images: Array.isArray(data.images) ? data.images : [],
+        images_public_ids: Array.isArray(data.images_public_ids)
+          ? data.images_public_ids
+          : [],
         sizes: (data.sizes || []).join(","),
         colors: (data.colors || []).join(","),
         stock_quantity: data.stock_quantity || 0,
@@ -90,7 +99,7 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
       if (data.images && data.images.length) setAdditionalPreviews(data.images);
     } catch (err) {
       console.error("Error loading product", err);
-      alert("Failed to load product");
+      toast.error("Failed to load product");
       navigate("/admin/products");
     } finally {
       setLoading(false);
@@ -132,180 +141,90 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
     setAdditionalPreviews(files.map((f) => URL.createObjectURL(f)));
   };
 
-  // upload a single file (returns uploaded url)
-  async function uploadFile(
-    file: File
-  ): Promise<{ url: string; public_id?: string }> {
-    // If your apiFetch supports FormData, you can use it. Otherwise use fetch directly.
-    const url = `/api/uploads`; // same-origin endpoint
+  // upload a single file (returns uploaded url + public id + transparent_url if available)
+  async function uploadFile(file: File): Promise<{
+    url: string;
+    public_id?: string;
+    transparent_url?: string | null;
+  }> {
     const fd = new FormData();
     fd.append("file", file);
 
-    // Try to use apiFetch if it supports FormData (preferred)
-    try {
-      // apiFetch should *not* set Content-Type header when body is FormData.
-      // Here we attempt apiFetch, but fall back to fetch if apiFetch fails.
-      // If your apiFetch forces JSON, remove this try and use fetch.
-      // @ts-ignore
-      const result = await apiFetch("/uploads", {
-        method: "POST",
-        body: fd,
-        isForm: true,
-      });
-      if (result && (result.url || result.secure_url)) {
-        return {
-          url: result.url || result.secure_url,
-          public_id: result.public_id,
-        };
-      }
-    } catch (err) {
-      // fallback to fetch
-    }
-
-    // fallback direct fetch
-    const token = localStorage.getItem("token"); // adjust to your auth storage if different
-    // const res = await fetch(url, {
-    //   method: "POST",
-    //   body: fd,
-    //   headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    // });
-    // if (!res.ok) {
-    //   const text = await res.text();
-    //   throw new Error(`Upload failed: ${res.status} ${text}`);
-    // }
-    // const json = await res.json();
-    // return { url: json.url || json.secure_url, public_id: json.public_id };
-    const result = await apiFetch("/uploads", {
+    // use apiFetch with isForm flag (it will not set content-type)
+    const result: any = await apiFetch("/uploads", {
       method: "POST",
       body: fd,
       isForm: true,
     });
-    // result may be { url, transparent_url, public_id, raw }
-    if (result && (result.transparent_url || result.url || result.secure_url)) {
-      return {
-        url: result.transparent_url || result.url || result.secure_url,
-        public_id: result.public_id,
-      };
-    }
+    // upload route returns: { url, public_id, transparent_url, raw }
+    return {
+      url: result.url || result.secure_url,
+      public_id: result.public_id || result.raw?.original?.public_id,
+      transparent_url:
+        result.transparent_url || result.raw?.transparent?.secure_url || null,
+    };
   }
 
-  // // uploads all selected files and returns urls
-  // const uploadSelectedFiles = async () => {
-  //   setUploadingFiles(true);
-  //   const uploaded: string[] = [...form.images]; // start with existing images
-  //   try {
-  //     if (mainFile) {
-  //       const r = await uploadFile(mainFile);
-  //       setForm((f) => ({ ...f, image_url: r.url }));
-  //       setMainPreview(r.url);
-  //     }
-
-  //     if (additionalFiles && additionalFiles.length) {
-  //       // upload sequentially to avoid rate limits; you can parallelize if desired
-  //       for (const f of additionalFiles) {
-  //         const r = await uploadFile(f);
-  //         uploaded.push(r.url);
-  //       }
-  //       setForm((f) => ({ ...f, images: uploaded }));
-  //       setAdditionalPreviews(uploaded);
-  //     }
-
-  //     setUploadingFiles(false);
-  //     return uploaded;
-  //   } catch (err) {
-  //     setUploadingFiles(false);
-  //     console.error("File upload error", err);
-  //     throw err;
-  //   }
-  // };
-
-  // const submit = async (e?: React.FormEvent) => {
-  //   e?.preventDefault();
-  //   setSaving(true);
-  //   try {
-  //     // If there are any files selected, upload them first
-  //     if (mainFile || (additionalFiles && additionalFiles.length)) {
-  //       await uploadSelectedFiles();
-  //     }
-  //     console.log("form before payload", form);
-  //     const payload: any = {
-  //       name: form.name,
-  //       slug: form.slug || slugify(form.name),
-  //       description: form.description,
-  //       price: Number(form.price) || 0,
-  //       image_url: form.image_url,
-  //       images: (form.images || []).filter(Boolean),
-  //       sizes: form.sizes ? form.sizes.split(",").map((s) => s.trim()) : [],
-  //       colors: form.colors ? form.colors.split(",").map((s) => s.trim()) : [],
-  //       stock_quantity: Number(form.stock_quantity) || 0,
-  //       status: form.status,
-  //       featured: !!form.featured,
-  //       category_id: form.category_id || null,
-  //       brand_id: form.brand_id || null,
-  //     };
-
-  //     console.log("payload", payload);
-
-  //     if (productId) {
-  //       await apiFetch(`/products/${productId}`, {
-  //         method: "PUT",
-  //         body: payload,
-  //       });
-  //       alert("Product updated");
-  //     } else {
-  //       await apiFetch("/products", {
-  //         method: "POST",
-  //         body: payload,
-  //       });
-
-  //       console.log("payload", payload);
-  //       alert("Product created");
-  //     }
-
-  //     navigate("/admin/products");
-  //   } catch (err: any) {
-  //     console.error("Save product error", err);
-  //     alert(err.message || "Failed to save product");
-  //   } finally {
-  //     setSaving(false);
-  //   }
-  // };
-
-  // --- inside ProductForm.tsx ---
-
-  // uploads all selected files and returns urls
+  // uploads all selected files and returns urls + public ids
   const uploadSelectedFiles = async (): Promise<{
     mainUrl?: string | null;
+    mainPublicId?: string | null;
+    mainTransparentUrl?: string | null;
     images: string[];
+    imagesPublicIds: string[];
   }> => {
     setUploadingFiles(true);
-    // start with existing images in state (don't mutate form.images directly)
-    const uploaded: string[] = Array.isArray(form.images)
+
+    // work off copies
+    const uploadedUrls: string[] = Array.isArray(form.images)
       ? [...form.images]
       : [];
+    const uploadedPublicIds: string[] = Array.isArray(form.images_public_ids)
+      ? [...form.images_public_ids]
+      : [];
+
     let mainUrl: string | null = form.image_url || null;
+    let mainPublicId: string | null = form.image_public_id || null;
+    let mainTransparentUrl: string | null = form.transparent_url || null;
 
     try {
       if (mainFile) {
         const r = await uploadFile(mainFile);
-        mainUrl = r.url;
-        // update state so previews match, but don't rely on this for payload
-        setForm((f) => ({ ...f, image_url: r.url }));
-        setMainPreview(r.url);
+        if (r.url) mainUrl = r.url;
+        if (r.public_id) mainPublicId = r.public_id;
+        if (r.transparent_url) mainTransparentUrl = r.transparent_url;
+        // update previews / form for UX
+        setForm((f) => ({
+          ...f,
+          image_url: mainUrl || "",
+          image_public_id: mainPublicId,
+          transparent_url: mainTransparentUrl,
+        }));
+        setMainPreview(mainUrl);
       }
 
       if (additionalFiles && additionalFiles.length) {
-        // upload sequentially to avoid rate limits; you can parallelize if desired
         for (const f of additionalFiles) {
           const r = await uploadFile(f);
-          if (r.url) uploaded.push(r.url);
+          if (r.url) uploadedUrls.push(r.url);
+          if (r.public_id) uploadedPublicIds.push(r.public_id);
         }
-        setForm((f) => ({ ...f, images: uploaded }));
-        setAdditionalPreviews(uploaded);
+        setForm((f) => ({
+          ...f,
+          images: uploadedUrls,
+          images_public_ids: uploadedPublicIds,
+        }));
+        setAdditionalPreviews(uploadedUrls);
       }
 
       setUploadingFiles(false);
-      return { mainUrl, images: uploaded };
+      return {
+        mainUrl,
+        mainPublicId,
+        mainTransparentUrl,
+        images: uploadedUrls,
+        imagesPublicIds: uploadedPublicIds,
+      };
     } catch (err) {
       setUploadingFiles(false);
       console.error("File upload error", err);
@@ -317,29 +236,50 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
     e?.preventDefault();
     setSaving(true);
     try {
-      // If there are any files selected, upload them first and use returned URLs
+      // If there are any files selected, upload them first and use returned URLs + public ids
       let uploadedMain: string | null = form.image_url || null;
+      let uploadedMainPublicId: string | null = form.image_public_id || null;
+      let uploadedMainTransparent: string | null = form.transparent_url || null;
       let uploadedImages: string[] = Array.isArray(form.images)
         ? [...form.images]
+        : [];
+      let uploadedImagesPublicIds: string[] = Array.isArray(
+        form.images_public_ids
+      )
+        ? [...form.images_public_ids]
         : [];
 
       if (mainFile || (additionalFiles && additionalFiles.length)) {
         const result = await uploadSelectedFiles();
         if (result.mainUrl) uploadedMain = result.mainUrl;
+        if (result.mainPublicId) uploadedMainPublicId = result.mainPublicId;
+        if (result.mainTransparentUrl)
+          uploadedMainTransparent = result.mainTransparentUrl;
         uploadedImages = result.images || uploadedImages;
+        uploadedImagesPublicIds =
+          result.imagesPublicIds || uploadedImagesPublicIds;
       }
 
       // DEBUG: show what we'll actually send
       console.log("form before payload", form);
-      console.log("upload results", { uploadedMain, uploadedImages });
+      console.log("upload results", {
+        uploadedMain,
+        uploadedMainPublicId,
+        uploadedMainTransparent,
+        uploadedImages,
+        uploadedImagesPublicIds,
+      });
 
       const payload: any = {
         name: form.name,
         slug: form.slug || slugify(form.name),
         description: form.description,
         price: Number(form.price) || 0,
-        image_url: uploadedMain || "", // use the upload result, not stale state
+        image_url: uploadedMain || "",
+        image_public_id: uploadedMainPublicId || null,
+        transparent_url: uploadedMainTransparent || null,
         images: (uploadedImages || []).filter(Boolean),
+        images_public_ids: (uploadedImagesPublicIds || []).filter(Boolean),
         sizes: form.sizes ? form.sizes.split(",").map((s) => s.trim()) : [],
         colors: form.colors ? form.colors.split(",").map((s) => s.trim()) : [],
         stock_quantity: Number(form.stock_quantity) || 0,
@@ -356,19 +296,19 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
           method: "PUT",
           body: payload,
         });
-        alert("Product updated");
+        toast.success("Product updated");
       } else {
         await apiFetch("/products", {
           method: "POST",
           body: payload,
         });
-        alert("Product created");
+        toast.success("Product created");
       }
 
       navigate("/admin/products");
     } catch (err: any) {
       console.error("Save product error", err);
-      alert(err.message || "Failed to save product");
+      toast.error(err.message || "Failed to save product");
     } finally {
       setSaving(false);
     }
@@ -425,7 +365,7 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
           <input
             type="number"
             name="price"
-            value={form.price}
+            value={form.price as any}
             onChange={handleChange}
             required
             className="w-full px-3 py-2 border rounded-lg"
@@ -439,7 +379,7 @@ export const ProductForm: React.FC<Props> = ({ productId }) => {
           <input
             type="number"
             name="stock_quantity"
-            value={form.stock_quantity}
+            value={form.stock_quantity as any}
             onChange={handleChange}
             className="w-full px-3 py-2 border rounded-lg"
           />
