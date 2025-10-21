@@ -7,6 +7,8 @@
     "dev": "nodemon src/index.js"
   },
   "dependencies": {
+    "@arcjet/node": "^1.0.0-beta.13",
+    "@sendgrid/mail": "^8.1.6",
     "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.7.0",
@@ -17,7 +19,11 @@
     "mongoose": "^7.0.0",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
-    "streamifier": "^0.1.1"
+    "nodemailer": "^7.0.9",
+    "streamifier": "^0.1.1",
+    "express-rate-limit": "^8.1.0",
+    "express-validator": "^7.2.1",
+    "mjml": "^4.16.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"

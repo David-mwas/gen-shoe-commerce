@@ -1,6 +1,8 @@
 const express = require("express");
-const {authMiddleware} = require("../middleware/auth.js");
+const { authMiddleware } = require("../middleware/auth.js");
 const Order = require("../models/order.model.js");
+
+const { sendMail } = require("../lib/mailer.js");
 
 const router = express.Router();
 
@@ -37,6 +39,25 @@ router.post("/", authMiddleware, async (req, res) => {
     });
 
     await order.save();
+    // //////////////////////
+    // send order email confirmation
+    const recipient = order.customer_email || (req.user && req.user.email);
+    if (recipient) {
+      const html = `
+        <p>Hi ${req.user?.full_name || ""},</p>
+        <p>Thanks for your order <strong>${order.order_number}</strong>.</p>
+        <p>Total: KSh ${order.total_amount}</p>
+        <p>We'll notify you when it ships.</p>
+        <h2>Best regards, ShoeStore</h2>
+      `;
+      sendMail({
+        to: recipient,
+        subject: `Order confirmation — ${order.order_number}`,
+        text: `Thanks for your order ${order.order_number}`,
+        html,
+      }).catch((err) => console.error("Order confirmation email failed:", err));
+    }
+    // /////////////////////
     return res.json(order);
   } catch (err) {
     console.error("Create order error", err);

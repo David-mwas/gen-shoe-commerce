@@ -325,215 +325,285 @@ async function deleteProduct(req, res) {
   //   }
   // }
 
+  const { id } = req.params;
 
-   const { id } = req.params;
+  // helper to derive public_id from URL (your existing helper)
+  function extractPublicIdFromUrl(url) {
+    if (!url || typeof url !== "string") return null;
+    const idx = url.indexOf("/upload/");
+    if (idx === -1) return null;
+    let after = url.slice(idx + "/upload/".length);
+    after = after.split("?")[0];
+    const vMatch = after.match(/^v\d+\//);
+    if (vMatch) after = after.slice(vMatch[0].length);
+    const firstSeg = after.split("/")[0];
+    if (/[,_=]/.test(firstSeg)) {
+      after = after.split("/").slice(1).join("/");
+    }
+    const lastDot = after.lastIndexOf(".");
+    if (lastDot !== -1) after = after.slice(0, lastDot);
+    return after;
+  }
 
-   // helper to derive public_id from URL (your existing helper)
-   function extractPublicIdFromUrl(url) {
-     if (!url || typeof url !== "string") return null;
-     const idx = url.indexOf("/upload/");
-     if (idx === -1) return null;
-     let after = url.slice(idx + "/upload/".length);
-     after = after.split("?")[0];
-     const vMatch = after.match(/^v\d+\//);
-     if (vMatch) after = after.slice(vMatch[0].length);
-     const firstSeg = after.split("/")[0];
-     if (/[,_=]/.test(firstSeg)) {
-       after = after.split("/").slice(1).join("/");
-     }
-     const lastDot = after.lastIndexOf(".");
-     if (lastDot !== -1) after = after.slice(0, lastDot);
-     return after;
-   }
+  async function deleteCloudinaryById(publicId) {
+    try {
+      if (!publicId) return { ok: false, reason: "no-public-id" };
+      const r = await cloudinary.uploader.destroy(publicId, {
+        resource_type: "image",
+      });
+      return { ok: true, result: r };
+    } catch (err) {
+      console.error("Cloudinary destroy failed", publicId, err);
+      return { ok: false, error: err.message || String(err) };
+    }
+  }
 
-   async function deleteCloudinaryById(publicId) {
-     try {
-       if (!publicId) return { ok: false, reason: "no-public-id" };
-       const r = await cloudinary.uploader.destroy(publicId, {
-         resource_type: "image",
-       });
-       return { ok: true, result: r };
-     } catch (err) {
-       console.error("Cloudinary destroy failed", publicId, err);
-       return { ok: false, error: err.message || String(err) };
-     }
-   }
+  let session;
+  try {
+    // load product first (outside transaction) to gather public ids & other metadata
+    const product = await Product.findById(id).lean().exec();
+    if (!product) return res.status(404).json({ message: "Product not found" });
 
-   let session;
-   try {
-     // load product first (outside transaction) to gather public ids & other metadata
-     const product = await Product.findById(id).lean().exec();
-     if (!product)
-       return res.status(404).json({ message: "Product not found" });
+    // collect Cloudinary public ids to attempt delete later
+    const toDeletePublicIds = new Set();
 
-     // collect Cloudinary public ids to attempt delete later
-     const toDeletePublicIds = new Set();
+    if (product.image_public_id) toDeletePublicIds.add(product.image_public_id);
+    if (product.transparent_url) {
+      const pid = product.image_public_id
+        ? `${product.image_public_id}_transparent`
+        : extractPublicIdFromUrl(product.transparent_url);
+      if (pid) toDeletePublicIds.add(pid);
+    }
+    if (!product.image_public_id && product.image_url) {
+      const pid = extractPublicIdFromUrl(product.image_url);
+      if (pid) toDeletePublicIds.add(pid);
+    }
 
-     if (product.image_public_id)
-       toDeletePublicIds.add(product.image_public_id);
-     if (product.transparent_url) {
-       const pid = product.image_public_id
-         ? `${product.image_public_id}_transparent`
-         : extractPublicIdFromUrl(product.transparent_url);
-       if (pid) toDeletePublicIds.add(pid);
-     }
-     if (!product.image_public_id && product.image_url) {
-       const pid = extractPublicIdFromUrl(product.image_url);
-       if (pid) toDeletePublicIds.add(pid);
-     }
+    if (
+      Array.isArray(product.images_public_ids) &&
+      product.images_public_ids.length
+    ) {
+      product.images_public_ids.forEach((p) => p && toDeletePublicIds.add(p));
+    } else if (Array.isArray(product.images) && product.images.length) {
+      for (const url of product.images) {
+        const pid = extractPublicIdFromUrl(url);
+        if (pid) toDeletePublicIds.add(pid);
+      }
+    }
 
-     if (
-       Array.isArray(product.images_public_ids) &&
-       product.images_public_ids.length
-     ) {
-       product.images_public_ids.forEach((p) => p && toDeletePublicIds.add(p));
-     } else if (Array.isArray(product.images) && product.images.length) {
-       for (const url of product.images) {
-         const pid = extractPublicIdFromUrl(url);
-         if (pid) toDeletePublicIds.add(pid);
-       }
-     }
+    // Start mongoose session & transaction
+    session = await mongoose.startSession();
 
-     // Start mongoose session & transaction
-     session = await mongoose.startSession();
+    let transactionResults = {
+      product_deleted: false,
+      carts_deleted: 0,
+      orders_updated: 0,
+    };
 
-     let transactionResults = {
-       product_deleted: false,
-       carts_deleted: 0,
-       orders_updated: 0,
-     };
+    // Check whether the server supports transactions (replica set). If not, warn & fallback to non-transactional ops.
+    let inTransaction = true;
+    try {
+      await session.withTransaction(
+        async () => {
+          // Delete the product document
+          const deleted = await Product.findByIdAndDelete(id, {
+            session,
+          }).exec();
+          if (!deleted) {
+            // abort transaction by throwing
+            throw new Error("Product not found during transaction");
+          }
+          transactionResults.product_deleted = true;
 
-     // Check whether the server supports transactions (replica set). If not, warn & fallback to non-transactional ops.
-     let inTransaction = true;
-     try {
-       await session.withTransaction(
-         async () => {
-           // Delete the product document
-           const deleted = await Product.findByIdAndDelete(id, {
-             session,
-           }).exec();
-           if (!deleted) {
-             // abort transaction by throwing
-             throw new Error("Product not found during transaction");
-           }
-           transactionResults.product_deleted = true;
+          // Delete cart items referencing this product
+          const cartRes = await CartItem.deleteMany(
+            { product: id },
+            { session }
+          ).exec();
+          transactionResults.carts_deleted = cartRes.deletedCount || 0;
 
-           // Delete cart items referencing this product
-           const cartRes = await CartItem.deleteMany(
-             { product: id },
-             { session }
-           ).exec();
-           transactionResults.carts_deleted = cartRes.deletedCount || 0;
+          // Find orders that contain items with this product_id string
+          const orders = await Order.find({ "items.product_id": id }, null, {
+            session,
+          }).exec();
 
-           // Find orders that contain items with this product_id string
-           const orders = await Order.find({ "items.product_id": id }, null, {
-             session,
-           }).exec();
+          for (const order of orders) {
+            // Remove items that reference the product
+            const originalCount = order.items.length;
+            order.items = order.items.filter(
+              (it) => String(it.product_id) !== String(id)
+            );
+            // Recalculate total (simple sum of price * quantity)
+            order.total_amount = order.items.reduce(
+              (sum, it) =>
+                sum + Number(it.price || 0) * Number(it.quantity || 1),
+              0
+            );
+            // Optionally change status if no items left — keeping commented
+            // if (order.items.length === 0) order.status = 'cancelled';
+            await order.save({ session });
+            if (order.items.length !== originalCount)
+              transactionResults.orders_updated++;
+          }
+        },
+        {
+          readConcern: { level: "local" },
+          writeConcern: { w: "majority" },
+          readPreference: "primary",
+        }
+      );
+    } catch (txErr) {
+      // If calling withTransaction throws because server doesn't support transactions, fallback
+      console.warn(
+        "Transaction failed or unsupported:",
+        txErr && txErr.message
+      );
+      // Try fallback non-transactional approach
+      inTransaction = false;
+      await session.endSession();
+      session = null;
 
-           for (const order of orders) {
-             // Remove items that reference the product
-             const originalCount = order.items.length;
-             order.items = order.items.filter(
-               (it) => String(it.product_id) !== String(id)
-             );
-             // Recalculate total (simple sum of price * quantity)
-             order.total_amount = order.items.reduce(
-               (sum, it) =>
-                 sum + Number(it.price || 0) * Number(it.quantity || 1),
-               0
-             );
-             // Optionally change status if no items left — keeping commented
-             // if (order.items.length === 0) order.status = 'cancelled';
-             await order.save({ session });
-             if (order.items.length !== originalCount)
-               transactionResults.orders_updated++;
-           }
-         },
-         {
-           readConcern: { level: "local" },
-           writeConcern: { w: "majority" },
-           readPreference: "primary",
-         }
-       );
-     } catch (txErr) {
-       // If calling withTransaction throws because server doesn't support transactions, fallback
-       console.warn(
-         "Transaction failed or unsupported:",
-         txErr && txErr.message
-       );
-       // Try fallback non-transactional approach
-       inTransaction = false;
-       await session.endSession();
-       session = null;
+      // Non-transactional fallback (best-effort)
+      // Delete product
+      const deleted = await Product.findByIdAndDelete(id).exec();
+      if (!deleted)
+        return res
+          .status(404)
+          .json({ message: "Product not found (fallback)" });
+      transactionResults.product_deleted = true;
 
-       // Non-transactional fallback (best-effort)
-       // Delete product
-       const deleted = await Product.findByIdAndDelete(id).exec();
-       if (!deleted)
-         return res
-           .status(404)
-           .json({ message: "Product not found (fallback)" });
-       transactionResults.product_deleted = true;
+      // Delete cart items
+      const cartRes = await CartItem.deleteMany({ product: id }).exec();
+      transactionResults.carts_deleted = cartRes.deletedCount || 0;
 
-       // Delete cart items
-       const cartRes = await CartItem.deleteMany({ product: id }).exec();
-       transactionResults.carts_deleted = cartRes.deletedCount || 0;
+      // Update orders
+      const orders = await Order.find({ "items.product_id": id }).exec();
+      for (const order of orders) {
+        const originalCount = order.items.length;
+        order.items = order.items.filter(
+          (it) => String(it.product_id) !== String(id)
+        );
+        order.total_amount = order.items.reduce(
+          (sum, it) => sum + Number(it.price || 0) * Number(it.quantity || 1),
+          0
+        );
+        await order.save();
+        if (order.items.length !== originalCount)
+          transactionResults.orders_updated++;
+      }
+    } finally {
+      if (session) {
+        try {
+          await session.endSession();
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    }
 
-       // Update orders
-       const orders = await Order.find({ "items.product_id": id }).exec();
-       for (const order of orders) {
-         const originalCount = order.items.length;
-         order.items = order.items.filter(
-           (it) => String(it.product_id) !== String(id)
-         );
-         order.total_amount = order.items.reduce(
-           (sum, it) => sum + Number(it.price || 0) * Number(it.quantity || 1),
-           0
-         );
-         await order.save();
-         if (order.items.length !== originalCount)
-           transactionResults.orders_updated++;
-       }
-     } finally {
-       if (session) {
-         try {
-           await session.endSession();
-         } catch (e) {
-           /* ignore */
-         }
-       }
-     }
+    // At this point DB changes are committed (either via transaction or fallback).
+    // Now delete Cloudinary assets (best-effort).
+    const cloudResults = [];
+    for (const pid of Array.from(toDeletePublicIds)) {
+      // attempt delete, push result
+      const result = await deleteCloudinaryById(pid);
+      cloudResults.push({ public_id: pid, ...result });
+    }
 
-     // At this point DB changes are committed (either via transaction or fallback).
-     // Now delete Cloudinary assets (best-effort).
-     const cloudResults = [];
-     for (const pid of Array.from(toDeletePublicIds)) {
-       // attempt delete, push result
-       const result = await deleteCloudinaryById(pid);
-       cloudResults.push({ public_id: pid, ...result });
-     }
+    return res.json({
+      message: "Product deleted (DB changes committed)",
+      transaction: inTransaction ? "committed" : "fallback_no_transaction",
+      db: transactionResults,
+      cloudinary: cloudResults,
+    });
+  } catch (err) {
+    console.error("Delete product error:", err);
+    // If session still active, try to abort
+    try {
+      if (session) {
+        await session.abortTransaction();
+        await session.endSession();
+      }
+    } catch (e) {
+      // ignore
+    }
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message || String(err) });
+  }
+}
 
-     return res.json({
-       message: "Product deleted (DB changes committed)",
-       transaction: inTransaction ? "committed" : "fallback_no_transaction",
-       db: transactionResults,
-       cloudinary: cloudResults,
-     });
-   } catch (err) {
-     console.error("Delete product error:", err);
-     // If session still active, try to abort
-     try {
-       if (session) {
-         await session.abortTransaction();
-         await session.endSession();
-       }
-     } catch (e) {
-       // ignore
-     }
-     return res
-       .status(500)
-       .json({ message: "Server error", error: err.message || String(err) });
-   }
+// get aggregate sizes
+async function getDistinctSizes(req, res) {
+  try {
+    const agg = [
+      // Project `sizes` as an array in all cases:
+      {
+        $project: {
+          sizes: {
+            $cond: [
+              // if sizes is already an array -> keep it
+              { $eq: [{ $type: "$sizes" }, "array"] },
+              "$sizes",
+              // else if sizes is a non-empty string -> split by comma
+              {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ["$sizes", null] },
+                      { $eq: [{ $type: "$sizes" }, "string"] },
+                    ],
+                  },
+                  {
+                    $map: {
+                      input: { $split: ["$sizes", ","] },
+                      as: "s",
+                      in: { $trim: { input: "$$s" } },
+                    },
+                  },
+                  [],
+                ],
+              },
+            ],
+          },
+        },
+      },
+
+      // Unwind the sizes array so we can group/dedupe
+      { $unwind: "$sizes" },
+
+      // Remove empty strings (safety)
+      { $match: { sizes: { $ne: "" } } },
+
+      // Group unique sizes
+      { $group: { _id: null, sizes: { $addToSet: "$sizes" } } },
+
+      // Project the array
+      { $project: { _id: 0, sizes: 1 } },
+    ];
+
+    const result = await Product.aggregate(agg).exec();
+    let sizes = (result[0] && result[0].sizes) || [];
+
+    // numeric-aware sort: if all items look numeric, sort numerically (so "35","40","42" sort OK)
+    const allNumeric =
+      sizes.length > 0 && sizes.every((s) => /^-?\d+(\.\d+)?$/.test(String(s)));
+    if (allNumeric) {
+      sizes = sizes
+        .map((s) => ({ n: Number(s), raw: String(s) }))
+        .sort((a, b) => a.n - b.n)
+        .map((x) => x.raw);
+    } else {
+      sizes.sort((a, b) =>
+        String(a).localeCompare(String(b), undefined, { numeric: true })
+      );
+    }
+
+    return res.json({ sizes });
+  } catch (err) {
+    console.error("getDistinctSizes error", err);
+    return res.status(500).json({ message: "Server error" });
+  }
 }
 module.exports = {
   createProduct,
@@ -541,4 +611,5 @@ module.exports = {
   getProductBySlug,
   getProductById,
   deleteProduct,
+  getDistinctSizes,
 };

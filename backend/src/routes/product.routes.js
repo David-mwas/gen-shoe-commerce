@@ -9,6 +9,7 @@ const {
   getProductBySlug,
   getProductById,
   deleteProduct,
+  getDistinctSizes,
 } = require("../controllers/product.controller.js");
 
 const router = express.Router();
@@ -22,6 +23,7 @@ const router = express.Router();
 
 // List & create
 router.get("/", getProducts);
+router.get("/sizes", getDistinctSizes);
 
 // Create (admin)
 router.post("/", authMiddleware, isAdmin, createProduct);

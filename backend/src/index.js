@@ -58,6 +58,7 @@ async function start() {
   // error handling
   app.use((err, req, res, next) => {
     console.error("Unhandled error:", err);
+    next()
     res.status(500).json({ error: err.message || "Internal server error" });
   });
 
