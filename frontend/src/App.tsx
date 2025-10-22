@@ -25,6 +25,8 @@ import { OrderPage } from "./pages/Order";
 import { ArrowLeft } from "lucide-react";
 import { ToastContainer } from "react-toastify";
 import { CartProvider } from "./providers/CartProvider";
+import ForgotPasswordPage from "./pages/ForgotPassword";
+import ResetPasswordPage from "./pages/ResetPassword";
 
 function App() {
   return (
@@ -63,6 +65,8 @@ function App() {
             <Route element={<AuthLayout />}>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+               <Route path="/reset-password" element={<ResetPasswordPage />} />
             </Route>
 
             {/* Fallback route (optional) */}

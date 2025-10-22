@@ -201,7 +201,7 @@ export function AdminDashboard() {
                 recentOrders.map((order) => (
                   <Link
                     key={order.id}
-                    to={`/admin/orders/${order.id}`}
+                    to={`/order/${order.id}`}
                     className="block p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
                   >
                     <div className="flex items-center justify-between mb-1">

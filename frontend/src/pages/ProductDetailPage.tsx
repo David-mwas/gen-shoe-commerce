@@ -78,7 +78,7 @@ export function ProductDetailPage() {
     setAdding(true);
     try {
       await addToCart(product!.id, selectedSize, selectedColor || null);
-      toast.success("Added to cart!");
+      // toast.success("Added to cart!");
     } catch (error) {
       console.error("Error adding to cart:", error);
       toast.error("Failed to add to cart");

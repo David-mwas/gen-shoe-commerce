@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { toast } from "react-toastify";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 export function SignupPage() {
   const [email, setEmail] = useState("");
@@ -10,6 +11,8 @@ export function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [isCOpen, setIsCOpen] = useState(false);
 
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -79,8 +82,16 @@ export function SignupPage() {
     }
   };
 
+  const tooglePasswordShow = (value: string) => {
+    if (value === "isOpen") {
+      setIsOpen((prev) => !prev);
+    } else {
+      setIsCOpen((prev) => !prev);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center py- px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
@@ -133,7 +144,7 @@ export function SignupPage() {
               />
             </div>
 
-            <div>
+            <div className="relative">
               <label
                 htmlFor="password"
                 className="block text-sm font-medium text-slate-700 mb-2"
@@ -142,15 +153,22 @@ export function SignupPage() {
               </label>
               <input
                 id="password"
-                type="password"
+                type={isOpen ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                 placeholder="Min. 8 characters"
               />
+              <div
+                className="absolute flex items-center justify-center right-0 top-[50%] px-2 h-[40%]"
+                onClick={() => tooglePasswordShow("isOpen")}
+              >
+                {" "}
+                {isOpen ? <EyeIcon /> : <EyeOffIcon />}
+              </div>
             </div>
-            <div>
+            <div className="relative">
               <label
                 htmlFor="password"
                 className="block text-sm font-medium text-slate-700 mb-2"
@@ -159,13 +177,20 @@ export function SignupPage() {
               </label>
               <input
                 id="confirm-password"
-                type="password"
+                type={isCOpen ? "text" : "password"}
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
                 placeholder="confirm password"
               />
+              <div
+                className="absolute flex items-center justify-center right-0 top-[50%] px-2 h-[40%]"
+                onClick={() => tooglePasswordShow("")}
+              >
+                {" "}
+                {isCOpen ? <EyeIcon /> : <EyeOffIcon />}
+              </div>
             </div>
 
             <button

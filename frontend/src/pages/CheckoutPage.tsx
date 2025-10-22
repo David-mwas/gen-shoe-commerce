@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-
 import { apiFetch } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
 import { useCartContext } from "../hooks/useCart";
+import { toast } from "react-toastify";
 
 export function CheckoutPage() {
   const { user, profile } = useAuth();
@@ -87,7 +87,10 @@ export function CheckoutPage() {
 
       // backend expected to return created order with id
       const orderId = createdOrder?.id || createdOrder?._id;
-      if (!orderId) throw new Error("Failed to create order");
+      if (!orderId) {
+        toast.error("Failed to create order");
+        throw new Error("Failed to create order");
+      }
 
       // If M-Pesa, call payment endpoint on backend
       if (formData.paymentMethod === "mpesa") {
@@ -112,9 +115,11 @@ export function CheckoutPage() {
 
       // clear cart
       await clearCart();
-
-      navigate(`/order-confirmation/${orderId}`);
+      toast.success("Order created successfully");
+      // await navigate(`/order-confirmation/${orderId}`);
+      window.location.href = `/order-confirmation/${orderId}`;
     } catch (err: any) {
+      toast.error("Failed to create order");
       console.error("Checkout error:", err);
       setError(err?.message || "Failed to process order");
     } finally {

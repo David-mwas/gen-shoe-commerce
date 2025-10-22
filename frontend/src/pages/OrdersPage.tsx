@@ -10,7 +10,7 @@ interface Order {
   status: string;
   total_amount: number;
   payment_status: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export function OrdersPage() {
@@ -96,7 +96,7 @@ export function OrdersPage() {
                     {order.order_number}
                   </p>
                   <p className="text-sm text-slate-600">
-                    {new Date(order.created_at).toLocaleDateString("en-US", {
+                    {new Date(order.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",

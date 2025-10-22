@@ -4,7 +4,6 @@ import { Filter } from "lucide-react";
 import { apiFetch } from "../lib/api";
 import { ProductCard } from "../components/products/ProductCard";
 
-
 import { useAuth } from "../hooks/useAuth";
 import { useCartContext } from "../hooks/useCart";
 import { toast } from "react-toastify";
@@ -48,6 +47,8 @@ export function ShopPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  // inside component, near other useState declarations:
+  const [availableSizes, setAvailableSizes] = useState<string[]>([]);
 
   const { user } = useAuth();
   const { addToCart } = useCartContext();
@@ -77,12 +78,12 @@ export function ShopPage() {
     searchQuery,
     featured,
   ]);
-
   const loadFilters = async () => {
     try {
-      const [categoriesRes, brandsRes] = await Promise.allSettled([
+      const [categoriesRes, brandsRes, sizesRes] = await Promise.allSettled([
         apiFetch("/categories"),
         apiFetch("/brands"),
+        apiFetch("/products/sizes"), // NEW
       ]);
 
       if (categoriesRes.status === "fulfilled")
@@ -91,12 +92,41 @@ export function ShopPage() {
 
       if (brandsRes.status === "fulfilled") setBrands(brandsRes.value || []);
       else setBrands([]);
+
+      if (sizesRes.status === "fulfilled") {
+        // sizesRes.value should be { sizes: [...] }
+        const s = (sizesRes.value && sizesRes.value.sizes) || [];
+        setAvailableSizes(Array.isArray(s) ? s : []);
+      } else {
+        setAvailableSizes([]);
+      }
     } catch (error) {
       console.error("Error loading filters:", error);
       setCategories([]);
       setBrands([]);
+      setAvailableSizes([]);
     }
   };
+
+  // const loadFilters = async () => {
+  //   try {
+  //     const [categoriesRes, brandsRes] = await Promise.allSettled([
+  //       apiFetch("/categories"),
+  //       apiFetch("/brands"),
+  //     ]);
+
+  //     if (categoriesRes.status === "fulfilled")
+  //       setCategories(categoriesRes.value || []);
+  //     else setCategories([]);
+
+  //     if (brandsRes.status === "fulfilled") setBrands(brandsRes.value || []);
+  //     else setBrands([]);
+  //   } catch (error) {
+  //     console.error("Error loading filters:", error);
+  //     setCategories([]);
+  //     setBrands([]);
+  //   }
+  // };
 
   const loadProducts = async () => {
     setLoading(true);
@@ -146,7 +176,7 @@ export function ShopPage() {
     try {
       const defaultSize = (product.sizes && product.sizes[0]) || "M";
       await addToCart(productId, defaultSize);
-      toast.success("Added to cart!");
+      // toast.success("Added to cart!");
     } catch (error) {
       console.error("Error adding to cart:", error);
       toast.error("Failed to add to cart");
@@ -170,7 +200,7 @@ export function ShopPage() {
   const hasActiveFilters =
     selectedCategory || selectedBrand || selectedSize || minPrice || maxPrice;
 
-  const availableSizes = ["6", "7", "8", "9", "10", "11", "12"];
+  // const availableSizes = ["6", "7", "8", "9", "10", "11", "12"];
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -274,7 +304,7 @@ export function ShopPage() {
                 <div className="border-t border-slate-200 pt-6">
                   <h3 className="font-medium text-slate-900 mb-3">Size</h3>
                   <div className="grid grid-cols-3 gap-2">
-                    {availableSizes.map((size) => (
+                    {/* {availableSizes.map((size) => (
                       <button
                         key={size}
                         onClick={() =>
@@ -291,7 +321,32 @@ export function ShopPage() {
                       >
                         {size}
                       </button>
-                    ))}
+                    ))} */}
+
+                    {availableSizes.length ? (
+                      availableSizes.map((size) => (
+                        <button
+                          key={size}
+                          onClick={() =>
+                            updateFilter(
+                              "size",
+                              selectedSize === size ? null : size
+                            )
+                          }
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            selectedSize === size
+                              ? "bg-slate-900 text-white"
+                              : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))
+                    ) : (
+                      <p className="text-sm text-slate-500 col-span-3">
+                        No sizes available
+                      </p>
+                    )}
                   </div>
                 </div>
 
