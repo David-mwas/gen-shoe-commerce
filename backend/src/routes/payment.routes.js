@@ -32,7 +32,7 @@ router.post("/mpesa", authMiddleware, async (req, res) => {
 
     // Ensure owner or admin
     if (
-      !req.user.is_admin &&
+      req.user.role !== process.env.USER_ROLE &&
       order.user &&
       order.user.toString() !== req.user._id.toString()
     ) {
@@ -96,7 +96,7 @@ router.post("/mpesa", authMiddleware, async (req, res) => {
  */
 router.post("/mpesa/register", authMiddleware, async (req, res) => {
   try {
-    if (!req.user.is_admin)
+    if (req.user.role !== process.env.USER_ROLE)
       return res.status(403).json({ message: "Admin only" });
     if (MPESA_MODE !== "real")
       return res.status(400).json({ message: "MPESA_MODE must be real" });

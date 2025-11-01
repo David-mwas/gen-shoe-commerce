@@ -69,7 +69,7 @@ router.post("/", authMiddleware, async (req, res) => {
 router.get("/", authMiddleware, async (req, res) => {
   try {
     // if admin return all orders
-    if (req.user.is_admin) {
+    if (req.user.role === process.env.USER_ROLE) {
       const all = await Order.find().sort({ createdAt: -1 });
       return res.json(all);
     }
@@ -91,7 +91,7 @@ router.get("/:id", authMiddleware, async (req, res) => {
     if (!order) return res.status(404).json({ message: "Order not found" });
 
     if (
-      !req.user.is_admin &&
+      req.user.role !== process.env.USER_ROLE &&
       (!order.user || order.user.toString() !== req.user._id.toString())
     ) {
       return res.status(403).json({ message: "Forbidden" });
@@ -111,7 +111,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
     if (!order) return res.status(404).json({ message: "Order not found" });
 
     if (
-      !req.user.is_admin &&
+      req.user.role !== process.env.USER_ROLE &&
       (!order.user || order.user.toString() !== req.user._id.toString())
     ) {
       return res.status(403).json({ message: "Forbidden" });

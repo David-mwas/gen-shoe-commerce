@@ -202,11 +202,11 @@ router.post(
 router.post(
   "/multiple",
   authMiddleware,
+  isAdmin,
   upload.array("files", 10),
   async (req, res) => {
     try {
-      if (!req.user?.is_admin)
-        return res.status(403).json({ message: "Admin only" });
+     
 
       const files = req.files || [];
       const folder = process.env.CLOUDINARY_FOLDER || "shoes";
