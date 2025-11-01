@@ -1,6 +1,7 @@
 const Product = require("../models/product.model.js");
 const CartItem = require("../models/cart.model.js");
 const Order = require("../models/order.model.js");
+const cloudinary = require("../lib/cloudinary.js");
 const { default: mongoose } = require("mongoose");
 
 function parseSizes(raw) {
