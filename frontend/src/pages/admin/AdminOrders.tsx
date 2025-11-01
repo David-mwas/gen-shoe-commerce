@@ -12,7 +12,7 @@ interface Order {
   payment_status: string;
   customer_email: string;
   customer_phone: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export function AdminOrders() {
@@ -146,7 +146,7 @@ export function AdminOrders() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-600">
-                      {new Date(order.created_at).toLocaleDateString()}
+                      {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
                       <select
